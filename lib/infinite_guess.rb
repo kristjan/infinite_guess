@@ -4,4 +4,5 @@ module InfiniteGuess
   OPTIONS  = %i[paper scissors rock]
 end
 
+require 'history'
 require 'bot'

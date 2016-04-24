@@ -4,21 +4,73 @@ module InfiniteGuess
 
     @@instance_count = 0
 
-    def initialize
-      reset!(::Random.new_seed)
-      @name = "InfiniteGuess.#{@@instance_count}"
+    def initialize(history = History.new)
+      @history = history
+      @name = "#{self.class.name}.#{@@instance_count}"
       @@instance_count += 1
+      post_initialize
+      reset!(::Random.new_seed)
     end
 
     def reset!(seed)
       @random = ::Random.new(seed * 2 ** 128)
+      post_reset(seed)
     end
 
     def throw
-      raise NotImplementedError
+      pick.tap do |thrown|
+        self.last_throw = thrown
+        history.mine(thrown)
+      end
     end
 
     def last_competitor_throw=(thrown)
+      history.theirs(thrown)
+      match_finished(history.last)
+    end
+
+    protected
+
+    attr_accessor :last_throw
+
+    def pick
+      raise NotImplementedError
+    end
+
+
+    private
+
+    attr_reader :history
+
+    def debug(*args)
+      puts(*args) if ENV['DEBUG']
+    end
+
+    def match_finished(match)
+    end
+
+    def post_initialize
+    end
+
+    def post_reset(seed)
+    end
+
+    BEATS = {
+      rock:     :scissors,
+      paper:    :rock,
+      scissors: :paper
+    }
+    FORFEIT = %i[invalid timeout]
+    def result(mine, theirs)
+      case
+      when FORFEIT.include?(theirs),
+           BEATS[mine] == theirs
+        :win
+      when mine == theirs
+        :tie
+      else
+        :lose
+      end
     end
   end
 end
