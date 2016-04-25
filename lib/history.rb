@@ -8,7 +8,7 @@ module InfiniteGuess
       end
 
       def winner
-        set = [mine, theirs].uniq - Bot::FORFEIT
+        set = [mine, theirs].uniq & OPTIONS
         return set.first if set.size < 2
         case set.sort
         when %i[paper rock]     then :paper
@@ -40,12 +40,19 @@ module InfiniteGuess
       history << Match.new(thrown, nil)
     end
 
+    def pop
+      history.pop
+    end
+
     def size
       history.size
     end
 
     def theirs(thrown)
-      history.last.theirs = thrown
+      last = history.last
+      return if last.nil?
+      return unless last.theirs.nil?
+      last.theirs = thrown
     end
 
     private

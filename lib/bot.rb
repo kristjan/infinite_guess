@@ -25,8 +25,12 @@ module InfiniteGuess
     end
 
     def last_competitor_throw=(thrown)
-      history.theirs(thrown)
-      match_finished(history.last)
+      if OPTIONS.include?(thrown)
+        history.theirs(thrown)
+        match_finished(history.last)
+      else
+        history.pop # Don't remember invalid matches
+      end
     end
 
     protected
