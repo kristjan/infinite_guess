@@ -56,15 +56,15 @@ module InfiniteGuess
     end
 
     BEATS = {
-      rock:     :scissors,
-      paper:    :rock,
-      scissors: :paper
+      rock:     :paper,
+      paper:    :scissors,
+      scissors: :rock
     }
     FORFEIT = %i[invalid timeout]
     def result(mine, theirs)
       case
       when FORFEIT.include?(theirs),
-           BEATS[mine] == theirs
+           BEATS[theirs] == mine
         :win
       when mine == theirs
         :tie

@@ -1,4 +1,5 @@
 require_relative '../bot'
+Dir[File.join(File.dirname(__FILE__), '*')].each { |bot| require bot }
 
 module InfiniteGuess
   class Bot
@@ -7,9 +8,12 @@ module InfiniteGuess
       def throw
         best = bots.values.max
         bots.each { |bot, score| bot.last_throw = bot.pick }
-        self.last_throw = bots.select do |bot, score|
+        front_runners = bots.select do |bot, score|
           score == best
-        end.keys.sample.last_throw.tap { |thrown| history.mine(thrown) }
+        end.keys
+        champion = front_runners[random.rand(front_runners.size)]
+        debug "- Throw by #{champion.name}"
+        self.last_throw = champion.last_throw.tap { |thrown| history.mine(thrown) }
       end
 
       private
@@ -22,15 +26,32 @@ module InfiniteGuess
           when :win  then bots[bot] += 1
           when :lose then bots[bot] -= 1
           end
-          debug "=== #{bot.name} #{bot.last_throw} vs #{match.theirs} -> #{score}"
+          #debug "=== #{bot.name} #{bot.last_throw} vs #{match.theirs} -> #{score}"
         end
       end
 
+      SUB_BOTS = [
+        CopyMine,
+        BeatMine,
+        LoseToMine,
+        CopyTheirs,
+        BeatTheirs,
+        LoseToTheirs,
+        CopyWinner,
+        BeatWinner,
+        LoseToWinner,
+        Bot::Random,
+        BeatRandom,
+        LoseToRandom,
+        NativeFarmer,
+        NativeGround,
+        HomegrownRandom,
+        BeatHomegrownRandom,
+        LoseToHomegrownRandom
+      ]
       def post_initialize
-        @bots = {
-          Bot::Random.new(history) => 0,
-          Bot::NativeSeed.new(history) => 1
-        }
+        @bots = Hash[SUB_BOTS.map { |bot| [bot.new(history), 0] }]
+        @bots[NativeSeed.new(history)] = 1
       end
 
       def post_reset(seed)
